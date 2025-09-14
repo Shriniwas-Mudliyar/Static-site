@@ -56,6 +56,7 @@ User ---> CloudFront (CDN) ---> S3 (Static Website Hosting)
 ## 📌 Next Improvements
 
 * Add **CI/CD pipeline** using GitHub Actions + S3 + CloudFront.
+* Add **Custom Domain name** using route53.
 * Integrate **WAF (Web Application Firewall)** for better security.
 * Use **Terraform/CloudFormation** for Infrastructure as Code.
 
