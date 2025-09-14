@@ -7,7 +7,8 @@
 This project demonstrates how to host and deliver a static website using **Amazon S3** for storage and **Amazon CloudFront** as a Content Delivery Network (CDN).
 The goal was to deploy a fast, secure, and globally distributed portfolio website.
 
-🔗 **Live Demo**: d287zfoj2oggb1.cloudfront.net
+🔗 [![Live Website](https://img.shields.io/badge/Website-Live-brightgreen?style=for-the-badge)](https://d287zfoj2oggb1.cloudfront.net)
+
 
 ---
 
