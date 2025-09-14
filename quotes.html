@@ -1,0 +1,263 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quote Generator</title>
+  <style>
+    :root{
+      --bg:#f6f8fa; --card:#ffffff; --accent:#2563eb; --muted:#6b7280;
+      --radius:12px; --mono: "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+      font-family:var(--mono); background:linear-gradient(180deg,#eef2ff,#fbfdff);
+      color:#0f172a; padding:24px;
+    }
+    .card{
+      width:100%; max-width:760px; background:var(--card); border-radius:var(--radius);
+      box-shadow: 0 10px 30px rgba(2,6,23,0.08); padding:22px; display:grid; gap:14px;
+      grid-template-columns: 1fr 300px;
+    }
+    .left{padding-right:12px}
+    h1{margin:0;font-size:1.2rem}
+    p.lead{margin:4px 0 0;color:var(--muted);font-size:0.9rem}
+
+    .quote-box{
+      margin-top:14px; background:#fff; padding:18px; border-radius:10px;
+      min-height:100px; border:1px solid rgba(2,6,23,0.05);
+      transition: opacity 160ms ease;
+    }
+    .quote-text{font-size:1.05rem; line-height:1.45; margin:0 0 8px}
+    .quote-author{font-size:0.9rem; color:var(--muted); text-align:right}
+
+    .controls{display:flex; gap:8px; margin-top:12px; flex-wrap:wrap}
+    .btn{
+      border:0; padding:10px 12px; border-radius:8px; cursor:pointer; font-weight:600;
+      background:var(--accent); color:white;
+    }
+    .btn.ghost{background:transparent;color:var(--accent);border:1px solid rgba(37,99,235,0.2)}
+    .btn.secondary{background:#eef2ff;color:var(--accent)}
+
+    .categories{display:flex; gap:8px; margin-top:8px; flex-wrap:wrap}
+    .cat-btn{padding:6px 10px;border-radius:8px;font-weight:600;border:1px solid rgba(2,6,23,0.05);background:transparent;cursor:pointer}
+    .cat-btn.active{background:var(--accent);color:white;border-color:transparent}
+
+    .right{padding-left:12px; border-left:1px dashed rgba(2,6,23,0.06)}
+    .section-title{font-size:0.95rem; margin:0 0 8px}
+    .favorites{display:flex; flex-direction:column; gap:8px; max-height:260px; overflow:auto}
+    .fav-item{background:var(--card); border-radius:8px; padding:10px; border:1px solid rgba(2,6,23,0.05)}
+    .fav-text{font-size:0.9rem}
+    .fav-author{font-size:0.8rem;color:var(--muted);text-align:right}
+    .clear-btn{background:#fee2e2;color:#b91c1c;border:none;padding:6px 10px;border-radius:8px;cursor:pointer}
+
+    @media(max-width:800px){
+      .card{grid-template-columns:1fr; padding:16px}
+      .right{border-left:0; padding-left:0; border-top:1px dashed rgba(2,6,23,0.06); padding-top:14px}
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="left">
+      <h1>Quote Generator</h1>
+      <p class="lead">Click New Quote or pick a category.</p>
+
+      <div class="categories" id="categories">
+        <button class="cat-btn active" data-cat="all">All</button>
+        <button class="cat-btn" data-cat="tech">Tech</button>
+        <button class="cat-btn" data-cat="life">Life</button>
+        <button class="cat-btn" data-cat="motivation">Motivation</button>
+        <button class="cat-btn" data-cat="funny">Funny</button>
+      </div>
+
+      <div class="quote-box" id="quoteBox">
+        <p class="quote-text" id="quoteText">Loading quote...</p>
+        <p class="quote-author" id="quoteAuthor"></p>
+      </div>
+
+      <div class="controls">
+        <button class="btn" id="newBtn">New Quote</button>
+        <button class="btn ghost" id="copyBtn">Copy</button>
+        <button class="btn secondary" id="saveBtn">Save Favorite</button>
+      </div>
+    </div>
+
+    <div class="right">
+      <h3 class="section-title">Favorites</h3>
+      <div class="favorites" id="favoritesList"></div>
+      <button class="clear-btn" id="clearFavs">Clear Favorites</button>
+    </div>
+  </div>
+
+  <script>
+    const QUOTES = [
+      // --- Tech (7) ---
+      { text: "First, solve the problem. Then, write the code.", author: "John Johnson", cat: "tech" },
+      { text: "Code is like humor. When you have to explain it, it's bad.", author: "Cory House", cat: "tech" },
+      { text: "Simplicity is the soul of efficiency.", author: "Austin Kleon", cat: "tech" },
+      { text: "Talk is cheap. Show me the code.", author: "Linus Torvalds", cat: "tech" },
+      { text: "Programs must be written for people to read.", author: "Harold Abelson", cat: "tech" },
+      { text: "Any fool can write code that a computer can understand. Good programmers write code that humans can understand.", author: "Martin Fowler", cat: "tech" },
+      { text: "Fix the cause, not the symptom.", author: "Steve Maguire", cat: "tech" },
+
+      // --- Life (7) ---
+      { text: "Do one thing every day that scares you.", author: "Eleanor Roosevelt", cat: "life" },
+      { text: "Dream big. Start small. Act now.", author: "Robin Sharma", cat: "life" },
+      { text: "Happiness comes from your own actions.", author: "Dalai Lama", cat: "life" },
+      { text: "Life is really simple, but we insist on making it complicated.", author: "Confucius", cat: "life" },
+      { text: "Good friends, good books, and a sleepy conscience: this is the ideal life.", author: "Mark Twain", cat: "life" },
+      { text: "In three words I can sum up everything I've learned about life: it goes on.", author: "Robert Frost", cat: "life" },
+      { text: "Life is what happens when you’re busy making other plans.", author: "John Lennon", cat: "life" },
+
+      // --- Motivation (7) ---
+      { text: "Fall seven times and stand up eight.", author: "Japanese Proverb", cat: "motivation" },
+      { text: "Done is better than perfect.", author: "Sheryl Sandberg", cat: "motivation" },
+      { text: "You have to start to be great.", author: "Zig Ziglar", cat: "motivation" },
+      { text: "Push yourself, because no one else is going to do it for you.", author: "Unknown", cat: "motivation" },
+      { text: "Success doesn’t come to you. You go to it.", author: "Marva Collins", cat: "motivation" },
+      { text: "Great things never come from comfort zones.", author: "Anonymous", cat: "motivation" },
+      { text: "Don’t stop when you’re tired. Stop when you’re done.", author: "Marilyn Monroe", cat: "motivation" },
+
+      // --- Funny (7) ---
+      { text: "I always wanted to be somebody, but now I realize I should have been more specific.", author: "Lily Tomlin", cat: "funny" },
+      { text: "Behind every great man is a woman rolling her eyes.", author: "Jim Carrey", cat: "funny" },
+      { text: "I’m not arguing, I’m just explaining why I’m right.", author: "Anonymous", cat: "funny" },
+      { text: "My bed is a magical place where I suddenly remember everything I forgot to do.", author: "Unknown", cat: "funny" },
+      { text: "I’m on a seafood diet. I see food, and I eat it.", author: "Unknown", cat: "funny" },
+      { text: "Life is short. Smile while you still have teeth.", author: "Unknown", cat: "funny" },
+      { text: "I used to think I was indecisive, but now I’m not so sure.", author: "Anonymous", cat: "funny" }
+    ];
+
+    const quoteText = document.getElementById("quoteText");
+    const quoteAuthor = document.getElementById("quoteAuthor");
+    const newBtn = document.getElementById("newBtn");
+    const copyBtn = document.getElementById("copyBtn");
+    const saveBtn = document.getElementById("saveBtn");
+    const favoritesList = document.getElementById("favoritesList");
+    const categories = document.getElementById("categories");
+    const clearFavsBtn = document.getElementById("clearFavs");
+
+    let currentCategory = "all";
+    let pool = [];
+    let currentQuote = null;
+    const FAV_KEY = "quote_favs_v1";
+
+    function shuffleArray(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function resetPool() {
+      const source = currentCategory === "all" ? QUOTES.slice() : QUOTES.filter(q => q.cat === currentCategory);
+      pool = shuffleArray(source);
+    }
+
+    function nextQuote() {
+      if (!pool || pool.length === 0) resetPool();
+      currentQuote = pool.pop();
+      renderQuote(currentQuote);
+    }
+
+    function renderQuote(q) {
+      if (!q) return;
+      const box = document.getElementById("quoteBox");
+      box.style.opacity = "0";
+      setTimeout(() => {
+        quoteText.textContent = q.text;
+        quoteAuthor.textContent = q.author ? "- " + q.author : "";
+        box.style.opacity = "1";
+      }, 120);
+    }
+
+    newBtn.addEventListener("click", nextQuote);
+
+    categories.addEventListener("click", (e) => {
+      const btn = e.target.closest(".cat-btn");
+      if (!btn) return;
+      document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentCategory = btn.dataset.cat;
+      resetPool();
+      nextQuote();
+    });
+
+    copyBtn.addEventListener("click", () => {
+      if (!currentQuote) return;
+      const text = `"${currentQuote.text}" - ${currentQuote.author || ""}`;
+      navigator.clipboard.writeText(text).then(() => {
+        const original = copyBtn.textContent;
+        copyBtn.textContent = "Copied!";
+        setTimeout(() => copyBtn.textContent = original, 1000);
+      });
+    });
+
+    function loadFavs() {
+      try { return JSON.parse(localStorage.getItem(FAV_KEY)) || []; } catch { return []; }
+    }
+
+    function saveFavs(arr) {
+      localStorage.setItem(FAV_KEY, JSON.stringify(arr));
+      renderFavs();
+    }
+
+    function renderFavs() {
+      const favs = loadFavs();
+      if (!favs || favs.length === 0) {
+        favoritesList.innerHTML = "<div style='color:#6b7280'>No favorites yet</div>";
+        return;
+      }
+      favoritesList.innerHTML = "";
+      favs.forEach((f, idx) => {
+        const item = document.createElement("div");
+        item.className = "fav-item";
+        item.innerHTML = "<div class='fav-text'></div><div class='fav-author'></div>";
+        item.querySelector(".fav-text").textContent = f.text;
+        item.querySelector(".fav-author").textContent = f.author ? "- " + f.author : "";
+        item.addEventListener("click", () => { currentQuote = f; renderQuote(f); });
+        const remove = document.createElement("button");
+        remove.textContent = "Remove";
+        remove.style.cssText = "float:right;margin-top:8px;background:transparent;border:0;color:#b91c1c;cursor:pointer;font-weight:700";
+        remove.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          const arr = loadFavs();
+          arr.splice(idx, 1);
+          saveFavs(arr);
+        });
+        item.appendChild(remove);
+        favoritesList.appendChild(item);
+      });
+    }
+
+    saveBtn.addEventListener("click", () => {
+      if (!currentQuote) return;
+      const favs = loadFavs();
+      if (!favs.some(f => f.text === currentQuote.text && f.author === currentQuote.author)) {
+        favs.unshift(currentQuote);
+        saveFavs(favs.slice(0, 30));
+        saveBtn.textContent = "Saved!";
+        setTimeout(() => saveBtn.textContent = "Save Favorite", 900);
+      } else {
+        saveBtn.textContent = "Already saved";
+        setTimeout(() => saveBtn.textContent = "Save Favorite", 900);
+      }
+    });
+
+    clearFavsBtn.addEventListener("click", () => {
+      localStorage.removeItem(FAV_KEY);
+      renderFavs();
+    });
+
+    (function init() {
+      resetPool();
+      nextQuote();
+      renderFavs();
+    })();
+  </script>
+</body>
+</html>
